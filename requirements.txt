@@ -1,0 +1,5 @@
+# This file contains the required dependencies for the project.
+# Ensure these packages are installed in your environment.
+
+mysql-connector-python>=8.0.0
+Flask>=2.0.0

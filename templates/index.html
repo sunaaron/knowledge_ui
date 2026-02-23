@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WXC Posts Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .no-posts-message {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+        .post-row {
+            border-bottom: 1px solid #ddd;
+        }
+        .post-row:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .post-row:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        .post-header {
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .post-body {
+            padding: 10px 0;
+        }
+        .summary-cell {
+            padding: 10px 0;
+            font-style: italic;
+            color: #555;
+        }
+        .url-cell {
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+        .title-cell {
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .body-cell {
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+        .post-container {
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .post-row-container {
+            padding: 10px;
+        }
+        .preformatted-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .toggle-container {
+            margin-top: 10px;
+            padding: 5px;
+            float: right;
+        }
+        .toggle-label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .post-row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .post-row-header-content {
+            flex: 1;
+        }
+        .delete-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 12px;
+            margin-left: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            float: right;
+        }
+        .delete-button:hover {
+            background-color: #d32f2f;
+        }
+        .filter-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .filter-label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .filter-select {
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WXC Posts Summary (Latest by Category)</h1>
+        
+        <!-- Filter section -->
+        <div class="filter-container">
+            <span class="filter-label">Filter by Category:</span>
+            <select id="categoryFilter" class="filter-select" onchange="applyCategoryFilter()">
+                <option value="znjy" {% if category_filter == 'znjy' %}selected{% endif %}>子女教育</option>
+                <option value="tzlc" {% if category_filter == 'tzlc' %}selected{% endif %}>投资理财</option>
+            </select>
+            
+            <span class="filter-label">Filter by Date:</span>
+            <select id="dateFilter" class="filter-select" onchange="applyDateFilter()">
+                <option value="">Latest Date</option>
+                {% for date in top_dates %}
+                <option value="{{ date }}" {% if date_filter == date %}selected{% endif %}>{{ date }}</option>
+                {% endfor %}
+            </select>
+            
+            <span class="filter-label">Filter by Useful Status:</span>
+            <select id="usefulFilter" class="filter-select" onchange="applyFilter()">
+                <option value="both" {% if filter == 'both' %}selected{% endif %}>Both</option>
+                <option value="useful_only" {% if filter == 'useful_only' %}selected{% endif %}>Useful Only</option>
+                <option value="useless_only" {% if filter == 'useless_only' %}selected{% endif %}>Useless Only</option>
+            </select>
+        </div>
+        
+        {% if posts %}
+            {% for post in posts %}
+            <div class="post-container">
+                <!-- Row 1: URL and Title -->
+                <div class="post-row">
+                    <div class="post-row-container">
+                        <div class="post-row-header">
+                            <div class="post-row-header-content">
+                                <strong>URL:</strong>
+                                {% if post.post_url %}
+                                    <a href="{{ post.post_url }}" target="_blank" style="color: #2196F3;">{{ post.post_url }}</a>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                                <br>
+                                <strong>Title:</strong> {{ post.post_title }}
+                            </div>
+                            <!-- Toggle for is_useful and Delete button -->
+                            <div class="toggle-container">
+                                <span class="toggle-label">Is Useful:</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="toggle-{{ post.id }}" {% if post.is_useful %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                                <button class="delete-button" onclick="confirmDelete({{ post.id }})">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Row 2: Body -->
+                <div class="post-row">
+                    <div class="post-row-container">
+                        <strong>Body:</strong><br>
+                        <span class="preformatted-text">{{ post.post_body }}</span>
+                    </div>
+                </div>
+                
+                <!-- Row 3: LLM Summary -->
+                <div class="post-row">
+                    <div class="post-row-container">
+                        <strong>LLM Summary:</strong><br>
+                        <span class="preformatted-text">{{ post.llm_summary }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-posts-message">
+                <p>No posts with LLM summaries found for the latest date in the category.</p>
+                <p>Please ensure that posts have been analyzed and have non-empty LLM summaries.</p>
+            </div>
+        {% endif %}
+        
+        <p><em>Note: Only posts with available LLM summaries are displayed.</em></p>
+    </div>
+
+    <script>
+        // Add event listeners to all toggle switches
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggles = document.querySelectorAll('.toggle-switch input[type="checkbox"]');
+            
+            toggles.forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    const postId = this.id.replace('toggle-', '');
+                    const newValue = this.checked ? 1 : 0;
+                    
+                    // Send update request to server
+                    fetch(`/update_is_useful/${postId}/${newValue}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log(`Successfully updated is_useful for post ${postId}`);
+                        } else {
+                            console.error(`Failed to update is_useful for post ${postId}`);
+                            // Revert the toggle if update failed
+                            this.checked = !this.checked;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating is_useful:', error);
+                        // Revert the toggle if update failed
+                        this.checked = !this.checked;
+                    });
+                });
+            });
+        });
+
+        // Function to confirm and delete a post
+        function confirmDelete(postId) {
+            if (confirm('Are you sure you want to delete this post?')) {
+                // If user confirms, send delete request to server
+                fetch(`/delete_post/${postId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log(`Successfully deleted post ${postId}`);
+                        // Remove the post container from the DOM
+                        const postElement = document.querySelector(`.post-container`).closest('.post-container');
+                        // Find the specific post container by ID or other means
+                        // For now, we'll reload the page to refresh the display
+                        location.reload();
+                    } else {
+                        console.error(`Failed to delete post ${postId}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting post:', error);
+                });
+            }
+        }
+
+        // Function to apply category filter
+        function applyCategoryFilter() {
+            const categoryValue = document.getElementById('categoryFilter').value;
+            const dateValue = document.getElementById('dateFilter').value;
+            const filterValue = document.getElementById('usefulFilter').value;
+            
+            // Redirect to the same page with all filter parameters
+            if (dateValue) {
+                window.location.href = `/?category=${categoryValue}&date=${dateValue}&filter=${filterValue}`;
+            } else {
+                window.location.href = `/?category=${categoryValue}&filter=${filterValue}`;
+            }
+        }
+
+        // Function to apply date filter
+        function applyDateFilter() {
+            const dateValue = document.getElementById('dateFilter').value;
+            const filterValue = document.getElementById('usefulFilter').value;
+            const categoryValue = document.getElementById('categoryFilter').value;
+            
+            // Redirect to the same page with all filter parameters
+            if (categoryValue) {
+                window.location.href = `/?category=${categoryValue}&date=${dateValue}&filter=${filterValue}`;
+            } else {
+                window.location.href = `/?date=${dateValue}&filter=${filterValue}`;
+            }
+        }
+
+        // Function to apply filter
+        function applyFilter() {
+            const filterValue = document.getElementById('usefulFilter').value;
+            const dateValue = document.getElementById('dateFilter').value;
+            const categoryValue = document.getElementById('categoryFilter').value;
+            
+            // Redirect to the same page with all filter parameters
+            if (categoryValue) {
+                window.location.href = `/?category=${categoryValue}&date=${dateValue}&filter=${filterValue}`;
+            } else {
+                window.location.href = `/?date=${dateValue}&filter=${filterValue}`;
+            }
+        }
+    </script>
+</body>
+</html>
