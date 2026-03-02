@@ -90,7 +90,8 @@ def index():
                     'post_title': post.get('post_title', ''),
                     'post_body': post.get('post_body', '')[:200] + '...' if len(post.get('post_body', '')) > 200 else post.get('post_body', ''),
                     'llm_summary': llm_summary,
-                    'is_useful': is_useful
+                    'is_useful': is_useful,
+                    'num_comments': post.get('num_comments', 0)  # Add num_comments field
                 })
     
     return render_template('index.html', posts=display_data, filter=filter_param, date_filter=date_filter, category_filter=category_filter, top_dates=top_dates)

@@ -208,6 +208,14 @@
                                 {% endif %}
                                 <br>
                                 <strong>Title:</strong> {{ post.post_title }}
+                                <br>
+                                <span style="color: 
+                                    {% if post.num_comments <= 3 %}red
+                                    {% elif post.num_comments > 3 and post.num_comments <= 5 %}orange
+                                    {% else %}green
+                                    {% endif %}">
+                                    <strong>Number of Comments: {{ post.num_comments }}</strong>
+                                </span>
                             </div>
                             <!-- Toggle for is_useful and Delete button -->
                             <div class="toggle-container">
